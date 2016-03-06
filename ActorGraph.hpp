@@ -28,7 +28,7 @@ protected:
   // Maybe add class data structure(s) here
   std::unordered_map<string, ActorNode*> actors;
   std::unordered_map<string, Movie*> movies;
-  std::vector<ActorEdge*> list;
+  std::vector<ActorEdge*> edges;
 
   bool BFSTraverse(ActorNode* start, ActorNode* end);
 
@@ -36,6 +36,9 @@ protected:
 
 public:
   ActorGraph(void);
+
+  ~ActorGraph()
+  {}
 
   // Maybe add some more methods here
   

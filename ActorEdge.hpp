@@ -1,18 +1,29 @@
 #ifndef ACTOREDGE_HPP 
 #define ACTOREDGE_HPP
 
-#include <vector>
 #include "ActorNode.hpp"
 #include "Movie.hpp"
+
+class ActorNode;
+class Movie;
 
 class ActorEdge
 {
   public:
- 	std::vector<Movie*> connection;
+    ActorNode* node;
+	Movie* movie;
+	int weight;
 
-  //public:
-  	ActorEdge()
+  	ActorEdge(ActorNode* node, Movie* movie, int weight)
+	  :node(node), movie(movie), weight(weight)
+	  {}
+
+	ActorEdge(ActorNode* node)
+	  :node(node)
+ 	  {}
+
+	~ActorEdge()
 	{}
+	
 };
-
 #endif

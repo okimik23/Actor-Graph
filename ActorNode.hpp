@@ -2,9 +2,12 @@
 #define ACTORNODE_HPP
 
 #include <limits>
+#include <vector>
 #include "Movie.hpp"
+#include "ActorEdge.hpp"
 
 class Movie;
+class ActorEdge;
 
 class ActorNode
 {
@@ -12,13 +15,33 @@ class ActorNode
   	std::string name;
 	int index;
 	int dist;
+	bool visit;
+	ActorEdge* path;
 	ActorNode* prev;
-	Movie* prevMovie;
+	std::vector<ActorEdge*> edges;
 
-  //public:
   	ActorNode(std::string name)
 	  : name(name)
-	  {dist = std::numeric_limits<int>::max();}
+	  {}
+
+	~ActorNode();
+
+	bool operator<(const ActorNode& other)
+	{
+	  if(dist == other.dist)
+	  {
+        return index > other.index;
+	  }
+	  return dist > other.dist;
+	}
 };
 
+class ActorComp
+{
+  public:
+    bool operator()(ActorNode*& lhs, ActorNode*& rhs) const
+	{
+	  return (*lhs) < (*rhs);
+	}
+};
 #endif

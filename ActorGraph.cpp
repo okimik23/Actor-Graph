@@ -17,6 +17,15 @@ using namespace std;
 
 ActorGraph::ActorGraph(void) {}
 
+/*
+ActorGraph::~ActorGraph()
+{
+  for(std::unordered_map<string,ActorNode*>::iterator it = actors.begin(); it != actors.end(); ++it)
+  {
+    delete (it->second);
+  }
+}
+*/
 
 bool ActorGraph::loadFromFile(const char* in_filename, bool use_weighted)
 {
@@ -74,7 +83,6 @@ bool ActorGraph::loadFromFile(const char* in_filename, bool use_weighted)
 	  node = new ActorNode(actor_name);
 	  node->index = index++;
 	  actors.insert({actor_name, node});
-	  list.push_back(new ActorEdge());
 	}
 	else
 	{
@@ -90,9 +98,10 @@ bool ActorGraph::loadFromFile(const char* in_filename, bool use_weighted)
 	{
 	  movie = movies[movie_key];
 	}
-
-	movie->cast.push_back(node);
-	list[node->index]->connection.push_back(movie);
+	ActorEdge* edge = new ActorEdge(node, movie, 1 + 2015 - movie->year);
+	node->edges.push_back(edge);
+	movie->edges.push_back(edge);
+	edges.push_back(edge);
   }
   
   if (!infile.eof())
@@ -151,27 +160,25 @@ bool ActorGraph::findPath(const char* in_filename, const char* out_filename,
 
 	start = actors[source];
 	end = actors[dest];
-	
+    
 	if(use_weighted)
 	{
 	  find = DijkTraverse(end,start);
 	  if(find)
 	  {
-	    Movie* movTrav = start->prevMovie;
 	    ActorNode* trav = start;
         while(1)
 		{
 		  outfile << "(" << trav->name << ")" << "--";
-		  outfile << "[" << movTrav->name << "#@" 
-		                 << movTrav->year << "]" << "-->";
+		  outfile << "[" << trav->path->movie->name << "#@" 
+		                 << trav->path->movie->year << "]" << "-->";
 
-		  trav = movTrav->prevActor;
+		  trav = trav->path->node;
 		  if(trav == end)
 		  {
 		    outfile << "(" << trav->name << ")" << endl;
 			break;
 		  }
-		  movTrav = movTrav->prev;
 		}
 	  }
 	}
@@ -181,17 +188,17 @@ bool ActorGraph::findPath(const char* in_filename, const char* out_filename,
 	  if(find)
 	  {
 	    ActorNode* trav = start;
-	  	while(1)
-	  	{
-	  	  outfile << "(" << trav->name << ")" << "--";
-		  outfile << "[" << trav->prevMovie->name << "#@" 
-		                 << trav->prevMovie->year << "]" << "-->";
-		  trav = trav->prev;
+	    while(1)
+	    {
+	      outfile << "(" << trav->name << ")" << "--";
+		  outfile << "[" << trav->path->movie->name << "#@" 
+		                 << trav->path->movie->year << "]" << "-->";
+		  trav = trav->path->node;
 		  if(trav == end)
 		  {
 		    outfile << "(" << trav->name << ")" << endl;
-		    break;
-		  }
+	  	    break;
+		  } 
 	    }
 	  }
 	}
@@ -210,103 +217,95 @@ bool ActorGraph::findPath(const char* in_filename, const char* out_filename,
 
 bool ActorGraph::BFSTraverse(ActorNode* start, ActorNode* end)
 {
+  queue<ActorNode*> explore;
   for(auto it = actors.begin(); it != actors.end(); ++it)
   {
-	it->second->dist = std::numeric_limits<int>::max(); 
+    it->second->visit = false;
   }
 
-  queue<ActorNode*> explore;
-  start->dist = 0;
-  
   explore.push(start);
+  start->visit = true;
 
   while(!explore.empty())
   {
-    ActorNode* next = explore.front();
+  	ActorNode* next = explore.front();
 	explore.pop();
-    ActorEdge* edge = list[next->index];
-	vector<Movie*>::iterator movie_it = edge->connection.begin();
-	for( ; movie_it != edge->connection.end(); ++movie_it)
+		
+    vector<ActorEdge*>::iterator it = next->edges.begin();
+	for( ; it != next->edges.end(); ++it)
 	{
-	  Movie* movie = *movie_it;
-	  vector<ActorNode*>::iterator actor_it = movie->cast.begin();
-	  for( ; actor_it != movie->cast.end(); ++actor_it)
+	  Movie* movie = (*it)->movie;
+	  
+	  vector<ActorEdge*>::iterator a_it = movie->edges.begin();
+	  for( ; a_it != movie->edges.end(); ++a_it)
 	  {
-	    ActorNode* actor = *actor_it;
-	  	if(actor->dist == std::numeric_limits<int>::max())
-	  	{
-	  	  if(actor->index == end->index)
-	  	  {
-	        actor->prev = next;
-			actor->prevMovie = movie;
-	        return true;
-	  	  }
-	  	  else
-	  	  {
-	        actor->prev = next;
-			actor->prevMovie = movie;
-		    actor->dist = next->dist + 1;
-	        explore.push(*actor_it);
-	  	  }
-        }
-	  }
-	}
-  }
-
-  return false;
-}
-
-bool ActorGraph::DijkTraverse(ActorNode* start, ActorNode* end)
-{
-  for(auto it = movies.begin(); it != movies.end(); ++it)
-  {
-    it->second->done = false;
-	it->second->weight = 1 + 2015 - it->second->year;
-	it->second->dist = 0; 
-  }
-  std::priority_queue<Movie*, std::vector<Movie*>, MovieComp> pq;
-  ActorEdge* edge = list[start->index];
-  vector<Movie*>::iterator movie_it = edge->connection.begin();
-  
-  for( ; movie_it != edge->connection.end(); ++movie_it)
-  {
-    (*movie_it)->prevActor = start;
-	(*movie_it)->dist = (*movie_it)->weight;
-    pq.push(*movie_it);
-  }
-
-  while(!pq.empty())
-  {
-    Movie* next = pq.top();
-	pq.pop();
-	if(!next->done)
-	{
-	  next->done = true;
-	  vector<ActorNode*>::iterator actor_it = next->cast.begin();
-	  for( ; actor_it != next->cast.end(); ++actor_it)
-	  {
-	  	ActorNode* actor = *actor_it;
-		if(actor == end)
+	    ActorNode* actor = (*a_it)->node;
+		if(!actor->visit)
 		{
-		  end->prevMovie = next;
-		  return true;
-		}
-
-	    vector<Movie*>::iterator movie_it = 
-						list[actor->index]->connection.begin();
-		for( ; movie_it != list[actor->index]->connection.end(); ++movie_it)
-		{
-		  Movie* movie = *movie_it;
-		  if(!movie->done)
+		  if(actor->index == end->index)
 		  {
-		    movie->dist = movie->weight + next->dist; 
-			movie->prev = next;
-		    movie->prevActor = actor;
-		    pq.push(movie);
+		    end->path = *it;
+			end->prev = next;
+			return true;
+		  }
+		  else
+		  {
+		    actor->visit = true;
+		    actor->path = *it;
+			actor->prev = next;
+		    explore.push(actor);
 		  }
 		}
 	  }
 	}
   }
-  return false; 
+  return false;
+}
+
+bool ActorGraph::DijkTraverse(ActorNode* start, ActorNode* end)
+{
+  for(auto it = actors.begin(); it != actors.end(); ++it)
+  {
+  	it->second->visit = false;
+	it->second->prev = 0;
+	it->second->dist = std::numeric_limits<int>::max();
+  }
+  std::priority_queue<ActorNode*, std::vector<ActorNode*>, ActorComp> pq;
+
+  start->dist = 0;
+  pq.push(start);
+
+  while(!pq.empty())
+  {
+	ActorNode* next = pq.top();
+	pq.pop();
+    
+	if(!next->visit)
+	{
+	  next->visit = true;
+
+	  std::vector<ActorEdge*>::iterator it = next->edges.begin();
+	  for( ; it != next->edges.end(); ++it)
+	  {
+	    ActorEdge* edge = *it;
+		Movie* movie = edge->movie;
+
+		std::vector<ActorEdge*>::iterator m_it = movie->edges.begin();		
+		for( ; m_it != movie->edges.end(); ++m_it)
+		{
+		  ActorEdge* inner_edge = *m_it;
+		  ActorNode* actor = inner_edge->node;
+		  int distance = inner_edge->weight + next->dist;
+		  if(distance < actor->dist)
+		  {
+		    actor->prev = next;
+			actor->path = edge;
+			actor->dist = distance;
+			pq.push(actor);
+		  }
+		}
+	  }
+    }
+  }
+  return true; 
 }
