@@ -33,7 +33,7 @@ moviespan: ActorGraph.o
 
 # Note: you do not have to include a *.cpp file if it aleady has a paired *.hpp file that is already included with class/method headers
 
-ActorGraph.o: UnionFind.hpp Movie.hpp ActorNode.hpp ActorEdge.hpp ActorGraph.hpp
+ActorGraph.o: Movie.hpp ActorNode.hpp ActorEdge.hpp ActorGraph.hpp
 
 
 clean:

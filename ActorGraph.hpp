@@ -11,6 +11,12 @@
 #define ACTORGRAPH_HPP
 
 #include <iostream>
+#include <vector>
+#include <string>
+#include <unordered_map>
+#include "ActorNode.hpp"
+#include "ActorEdge.hpp"
+#include "Movie.hpp"
 
 // Maybe include some data structures here
 
@@ -20,6 +26,13 @@ class ActorGraph {
 protected:
   
   // Maybe add class data structure(s) here
+  std::unordered_map<string, ActorNode*> actors;
+  std::unordered_map<string, Movie*> movies;
+  std::vector<ActorEdge*> list;
+
+  bool BFSTraverse(ActorNode* start, ActorNode* end);
+
+  bool DijkTraverse(ActorNode* start, ActorNode* end);
 
 public:
   ActorGraph(void);
@@ -36,6 +49,9 @@ public:
    * return true if file was loaded sucessfully, false otherwise
    */
   bool loadFromFile(const char* in_filename, bool use_weighted_edges);
+
+  bool findPath(const char* in_filename, const char* out_filename, 
+  				bool use_weighted);
   
 };
 
