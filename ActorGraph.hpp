@@ -30,9 +30,11 @@ protected:
   std::unordered_map<string, Movie*> movies;
   std::vector<ActorEdge*> edges;
 
-  bool BFSTraverse(ActorNode* start, ActorNode* end);
+  bool BFSTraverse(ActorNode* start, ActorNode* end, int year);
 
   bool DijkTraverse(ActorNode* start, ActorNode* end);
+
+  int BFSSearch(ActorNode* start, ActorNode* end);
 
 public:
   ActorGraph(void);
@@ -54,6 +56,9 @@ public:
 
   bool findPath(const char* in_filename, const char* out_filename, 
   				bool use_weighted);
+  
+  bool moviespan(const char* in_filename, const char* out_filename,
+  				 bool ufind);
   
 };
 

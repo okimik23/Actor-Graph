@@ -128,8 +128,8 @@ bool ActorGraph::findPath(const char* in_filename, const char* out_filename,
 
   bool have_header = false;
   
-  ActorNode* start = 0;
-  ActorNode* end = 0;
+  ActorNode* start;
+  ActorNode* end;
   
   while(infile)
   {
@@ -164,6 +164,19 @@ bool ActorGraph::findPath(const char* in_filename, const char* out_filename,
 	string dest(record[1]);
 	bool find;
 
+	std::unordered_map<std::string, ActorNode*>::iterator it;
+	
+	it = actors.find(source);
+	if(it == actors.end())
+	{
+	  continue;
+	}
+	it = actors.find(dest);
+	if(it == actors.end())
+	{
+	  continue;
+	}
+
 	start = actors[source];
 	end = actors[dest];
     
@@ -190,7 +203,7 @@ bool ActorGraph::findPath(const char* in_filename, const char* out_filename,
 	}
 	else
 	{
-	  find = BFSTraverse(end, start);
+	  find = BFSTraverse(end, start, 2016);
 	  if(find)
 	  {
 	    ActorNode* trav = start;
@@ -221,8 +234,116 @@ bool ActorGraph::findPath(const char* in_filename, const char* out_filename,
   return true;
 }
 
-bool ActorGraph::BFSTraverse(ActorNode* start, ActorNode* end)
+bool ActorGraph::moviespan(const char* in_filename, 
+						   const char* out_filename, bool ufind)
 {
+  ifstream infile(in_filename);
+  ofstream outfile(out_filename);
+
+  bool have_header = false;
+  
+  ActorNode* start;
+  ActorNode* end;
+  
+  while(infile)
+  {
+    start = 0;
+	end = 0;
+    string s;
+	
+	if(!getline(infile,s)) break;
+    
+	if(!have_header)
+	{
+	  have_header = true;
+	  outfile << "Actor1\tActor2\tYear" << endl;
+	  continue;
+	}
+
+	istringstream ss(s);
+	vector<string> record;
+
+	while(ss)
+	{
+	  string next;
+	  if(!getline(ss, next, '\t')) break;
+
+	  record.push_back(next);
+	}
+
+	if(record.size() != 2)
+	{
+	  continue;
+	}
+
+	string source(record[0]);
+	string dest(record[1]);
+	bool find;
+
+	std::unordered_map<std::string, ActorNode*>::iterator it;
+	
+	it = actors.find(source);
+	if(it != actors.end())
+	{
+	  start = it->second;
+	}
+
+	it = actors.find(dest);
+	if(it != actors.end())
+	{
+	  end = it->second;
+	}
+    
+	//TODO find the year from here, implement ufind
+	if(ufind)
+	{
+	  
+	}
+	else
+	{
+	  int year = BFSSearch(start, end);
+	  outfile << source << "\t" << dest << "\t" << year << endl;
+	}
+  }
+  
+  if(!infile.eof())
+  {
+    cerr << "Failed to read " << in_filename << "!\n";
+	return false;
+  }
+  infile.close();
+  outfile.close();
+  return true;
+}
+
+int ActorGraph::BFSSearch(ActorNode* start, ActorNode* end)
+{
+  if(!start || !end)
+  {
+    return 9999;
+  }
+
+  bool find = false;
+  int year = 1955;
+  while(year < 2016)
+  {
+ 	find = BFSTraverse(start, end, year);
+	if(find)
+	{
+      return year;	  
+	}
+	year++;
+  }
+  return 9999; 
+}
+
+bool ActorGraph::BFSTraverse(ActorNode* start, ActorNode* end, int year)
+{
+  if(!start || !end)
+  {
+    return false;
+  }
+
   queue<ActorNode*> explore;
   for(auto it = actors.begin(); it != actors.end(); ++it)
   {
@@ -241,6 +362,11 @@ bool ActorGraph::BFSTraverse(ActorNode* start, ActorNode* end)
 	for( ; it != next->edges.end(); ++it)
 	{
 	  Movie* movie = (*it)->movie;
+
+	  if(movie->year > year)
+	  {
+	    continue;
+	  }
 	  
 	  vector<ActorEdge*>::iterator a_it = movie->edges.begin();
 	  for( ; a_it != movie->edges.end(); ++a_it)
@@ -270,6 +396,11 @@ bool ActorGraph::BFSTraverse(ActorNode* start, ActorNode* end)
 
 bool ActorGraph::DijkTraverse(ActorNode* start, ActorNode* end)
 {
+  if(!start || !end)
+  {
+    return false;
+  }
+
   for(auto it = actors.begin(); it != actors.end(); ++it)
   {
   	it->second->visit = false;

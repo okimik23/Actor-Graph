@@ -14,7 +14,7 @@ else
   LDFLAGS += -g
 endif
 
-all: pathfinder moviespan
+all: pathfinder actorconnections
 
 
 
@@ -26,7 +26,7 @@ pathfinder: ActorGraph.o
 
 # include what ever source code *.hpp files moviespan relies on (these are merely the ones thst were used in the solution)
 
-moviespan: ActorGraph.o
+actorconnections: ActorGraph.o
 
 
 # include what ever source code *.hpp files ActorGraph relies on (these are merely the ones thst were used in the solution)
