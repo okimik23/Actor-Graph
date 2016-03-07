@@ -3,10 +3,9 @@
 
 #include <limits>
 #include <vector>
-#include "Movie.hpp"
+#include <string>
 #include "ActorEdge.hpp"
 
-class Movie;
 class ActorEdge;
 
 class ActorNode
@@ -24,7 +23,14 @@ class ActorNode
 	  : name(name)
 	  {}
 
-	~ActorNode();
+	~ActorNode()
+	{
+	  for(std::vector<ActorEdge*>::iterator it = edges.begin()
+	  	  ; it != edges.end(); ++it)
+	  {
+	   	delete(*it);
+	  }
+	}
 
 	bool operator<(const ActorNode& other)
 	{

@@ -17,15 +17,21 @@ using namespace std;
 
 ActorGraph::ActorGraph(void) {}
 
-/*
+
 ActorGraph::~ActorGraph()
 {
-  for(std::unordered_map<string,ActorNode*>::iterator it = actors.begin(); it != actors.end(); ++it)
+  for(std::unordered_map<string,ActorNode*>::iterator it = actors.begin()
+  	  ; it != actors.end(); ++it)
+  {
+    delete (it->second);
+  }
+  for(std::unordered_map<string,Movie*>::iterator it = movies.begin()
+      ; it != movies.end(); ++it)
   {
     delete (it->second);
   }
 }
-*/
+
 
 bool ActorGraph::loadFromFile(const char* in_filename, bool use_weighted)
 {

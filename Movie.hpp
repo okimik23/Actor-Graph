@@ -2,10 +2,9 @@
 #define MOVIE_HPP
 
 #include <vector>
-#include "ActorNode.hpp"
+#include <string>
 #include "ActorEdge.hpp"
 
-class ActorNode;
 class ActorEdge;
 
 class Movie
