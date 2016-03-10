@@ -30,6 +30,11 @@ ActorGraph::~ActorGraph()
   {
     delete (it->second);
   }
+  for(std::vector<Disjoint*>::iterator it = set.begin()
+      ; it != set.end(); ++it)
+  {
+    delete (*it);
+  }
 }
 
 
@@ -82,6 +87,11 @@ bool ActorGraph::loadFromFile(const char* in_filename, bool use_weighted)
     string actor_name(record[0]);
     string movie_title(record[1]);
     int movie_year = stoi(record[2]);
+    if(movie_year < min_year)
+	{
+	  min_year = movie_year;
+	}
+
 	string movie_key = record[1] + record[2];
     
 	if(actors.find(actor_name) == actors.end())
@@ -89,6 +99,8 @@ bool ActorGraph::loadFromFile(const char* in_filename, bool use_weighted)
 	  node = new ActorNode(actor_name);
 	  node->index = index++;
 	  actors.insert({actor_name, node});
+	  Disjoint* disjoint = new Disjoint(node);
+	  set.push_back(disjoint);
 	}
 	else
 	{
@@ -244,6 +256,9 @@ bool ActorGraph::moviespan(const char* in_filename,
   
   ActorNode* start;
   ActorNode* end;
+
+  std::chrono::time_point<std::chrono::high_resolution_clock> begin
+       = std::chrono::high_resolution_clock::now();
   
   while(infile)
   {
@@ -278,7 +293,6 @@ bool ActorGraph::moviespan(const char* in_filename,
 
 	string source(record[0]);
 	string dest(record[1]);
-	bool find;
 
 	std::unordered_map<std::string, ActorNode*>::iterator it;
 	
@@ -294,10 +308,10 @@ bool ActorGraph::moviespan(const char* in_filename,
 	  end = it->second;
 	}
     
-	//TODO find the year from here, implement ufind
 	if(ufind)
 	{
-	  
+	  int year = UnionFind(start,end);
+	  outfile << source << "\t" << dest << "\t" << year << endl;
 	}
 	else
 	{
@@ -305,7 +319,23 @@ bool ActorGraph::moviespan(const char* in_filename,
 	  outfile << source << "\t" << dest << "\t" << year << endl;
 	}
   }
+
+  std::chrono::time_point<std::chrono::high_resolution_clock> done 
+       = std::chrono::high_resolution_clock::now();
+ 
+  if(ufind)
+  {
+    std::cout << "Union Find took ";
+  }
+  else
+  {
+    std::cout << "BFS Search took ";
+  }
+
+  long int time = (long int)std::chrono::duration_cast<std::chrono::milliseconds>(done-begin).count();
   
+  std::cout << time << " milliseconds" << std::endl;
+
   if(!infile.eof())
   {
     cerr << "Failed to read " << in_filename << "!\n";
@@ -316,6 +346,56 @@ bool ActorGraph::moviespan(const char* in_filename,
   return true;
 }
 
+int ActorGraph::UnionFind(ActorNode* start, ActorNode* end)
+{
+  if(!start || !end)
+  {
+    return 9999;
+  }
+
+  std::vector<Disjoint*>::iterator joint_it = set.begin();
+  
+  for( ; joint_it != set.end(); ++joint_it)
+  {
+  	Disjoint* disjoint = *joint_it;
+    disjoint->sentinel = disjoint;
+	disjoint->size = 1;
+  }
+
+  int year = min_year;
+
+  while(year < 2016)
+  {
+    std::unordered_map<string,Movie*>::iterator it = movies.begin();
+  	for( ; it != movies.end(); ++it)
+  	{
+	  Movie* movie = it->second;
+      if(movie->year == year)
+	  {
+	    Disjoint* disjoint = 0;
+	    std::vector<ActorEdge*>::iterator act_it = movie->edges.begin();
+		for( ; act_it != movie->edges.end(); ++act_it)
+		{
+		  ActorNode* actor = (*act_it)->node;
+		  if(disjoint)
+		  {
+		    disjoint->Union(set[actor->index]);
+		  }
+		  disjoint = set[actor->index];
+		}
+	  }
+  	}
+	Disjoint* first = set[start->index];
+	Disjoint* second = set[end->index];
+	if(first->Find()->node->index == second->Find()->node->index)
+	{
+	  return year;
+	}
+	year++;
+  }
+  return 9999;
+}
+
 int ActorGraph::BFSSearch(ActorNode* start, ActorNode* end)
 {
   if(!start || !end)
@@ -324,7 +404,7 @@ int ActorGraph::BFSSearch(ActorNode* start, ActorNode* end)
   }
 
   bool find = false;
-  int year = 1955;
+  int year = min_year;
   while(year < 2016)
   {
  	find = BFSTraverse(start, end, year);

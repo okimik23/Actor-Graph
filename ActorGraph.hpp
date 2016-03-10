@@ -14,9 +14,11 @@
 #include <vector>
 #include <string>
 #include <unordered_map>
+#include <chrono>
 #include "ActorNode.hpp"
 #include "ActorEdge.hpp"
 #include "Movie.hpp"
+#include "Disjoint.hpp"
 
 // Maybe include some data structures here
 
@@ -29,12 +31,16 @@ protected:
   std::unordered_map<string, ActorNode*> actors;
   std::unordered_map<string, Movie*> movies;
   std::vector<ActorEdge*> edges;
+  int min_year = 9999;
+  std::vector<Disjoint*> set;
 
   bool BFSTraverse(ActorNode* start, ActorNode* end, int year);
 
   bool DijkTraverse(ActorNode* start, ActorNode* end);
 
   int BFSSearch(ActorNode* start, ActorNode* end);
+
+  int UnionFind(ActorNode*, ActorNode* end);
 
 public:
   ActorGraph(void);
