@@ -38,7 +38,7 @@ ActorGraph::~ActorGraph()
 }
 
 
-bool ActorGraph::loadFromFile(const char* in_filename, bool use_weighted)
+bool ActorGraph::loadFromFile(const char* in_filename)
 {
   
   // Initialize the file stream
@@ -346,6 +346,62 @@ bool ActorGraph::moviespan(const char* in_filename,
   return true;
 }
 
+bool ActorGraph::averageDist(const char* out_filename, 
+                             std::string actorName)
+{
+  ofstream outfile(out_filename);
+  outfile << "Actor" << endl;
+
+  string source(actorName);
+
+  std::unordered_map<string, ActorNode*>::iterator it;
+  it = actors.find(source);
+  if(it == actors.end())
+  {
+    std::cout << "Actor, " << actorName << " does not exist in our"
+              << " database, select another" << std::endl;
+    return false;
+  }
+
+  ActorNode* start = it->second; 
+  
+  int unweight_dist = 0;
+  int numActors = 0;
+  for(auto act_it = actors.begin(); act_it != actors.end(); ++act_it)
+  {
+    ActorNode* end = act_it->second;
+        
+	bool find = BFSTraverse(end, start, 2016);
+	if(!find)
+	{
+	  continue;
+	}
+	outfile << end->name << std::endl;
+	++numActors;
+
+	ActorNode* trav = start;
+	while(1)
+	{
+      trav = trav->path->node;
+	  ++unweight_dist;
+	  if(trav == end)
+	  {
+	    break;
+      } 
+	}
+  }
+
+  outfile << numActors << " Actors are Connected to " 
+          << actorName << std::endl;
+  
+  double unweight_average = (double)unweight_dist / numActors;
+
+  outfile << "The Average Shortest Unweighted Distance to "
+          << actorName << " is " << unweight_average << std::endl;
+
+  outfile.close();
+  return true;
+}
 int ActorGraph::UnionFind(ActorNode* start, ActorNode* end)
 {
   if(!start || !end)
@@ -420,6 +476,11 @@ int ActorGraph::BFSSearch(ActorNode* start, ActorNode* end)
 bool ActorGraph::BFSTraverse(ActorNode* start, ActorNode* end, int year)
 {
   if(!start || !end)
+  {
+    return false;
+  }
+
+  if(start->index == end->index)
   {
     return false;
   }

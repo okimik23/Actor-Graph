@@ -27,7 +27,7 @@ int main(int argc, char* argv[])
 	return -1;
   }
   
-  bool success = graph.loadFromFile(argv[1], use_weighted);
+  bool success = graph.loadFromFile(argv[1]);
 
   if(!success)
   {

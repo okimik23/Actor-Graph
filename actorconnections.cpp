@@ -35,7 +35,7 @@ int main(int argc, char* argv[])
 
   ActorGraph graph;
 
-  bool success = graph.loadFromFile(argv[1], false);
+  bool success = graph.loadFromFile(argv[1]);
   if(!success)
   {
   	return -1; 

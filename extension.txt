@@ -1,0 +1,48 @@
+Jae Song
+jys023, A12042160
+CSE 100 HW 4
+Extension Writeup
+
+The problem I wanted to solve is what is the average unweighted
+shorted path of a given actor.
+
+I solved this by running BFS for every actor possible to the 
+given actor. I would add up all the number of edges it takes to
+get to one actor to another and average it out at the end.
+
+I tested this by doing the same problem on a smaller inputfile but
+doing the calculations manually. I would find the unweighted shortest
+path between every actor and a given actor and calculate the 
+average.
+
+My extension will take in 3 arguments.
+	1 - movie database inputfile. so a file that follows movie_casts.tsv
+	    format and functionality
+	2 - output filename, this can essentially be any valid output
+	    filename that you wish
+    3 - ACTOR Name, this is possibly the most important argument.
+	    The extension program will take in the actor name and find
+		the shortest unweighted path to that actor from all the actors
+		present in the movie database inputfile. It will then calculate 
+		the average of the shortest unweighted paths.
+		WARNING!!! when you are passing in the actor name it must follow
+		the same format as present in the movie database file.
+			50 CENT
+			BADALUCCO JR., JOSEPH
+			BARANSKI, CHRISTINE 
+		these would be valid actor names, and also when the name has
+		parantheses (), then you must pass them in like this:
+			BACON, KEVIN \(I\)
+		this has to do with how bash interprets () in command prompt
+ 	
+	So the way to use this extension program is simple, pass in
+	movie database file, name of the outputfile you want, and finally
+	the name of the actor that you wish to calculate the average
+	shortest unweighted distance of. It will go through all the actors,
+	excluding the self-paths, and calculate the average. 
+    
+	The output file will print out all the actors that are connected
+	to the given actor.
+	Then at the last two lines, it will print out how many actors are
+	connected, and what the average unweighted shortest path was.
+

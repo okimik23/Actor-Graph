@@ -58,13 +58,15 @@ public:
    *
    * return true if file was loaded sucessfully, false otherwise
    */
-  bool loadFromFile(const char* in_filename, bool use_weighted_edges);
+  bool loadFromFile(const char* in_filename); 
 
   bool findPath(const char* in_filename, const char* out_filename, 
   				bool use_weighted);
   
   bool moviespan(const char* in_filename, const char* out_filename,
   				 bool ufind);
+  
+  bool averageDist(const char* out_filename, std::string actorName);
   
 };
 
